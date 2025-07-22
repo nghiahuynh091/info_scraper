@@ -27,7 +27,7 @@ console.log('Scraping OptiSigns help center...');
 
 const scraper = new ZendeskApiScraper({
   baseUrl: 'https://support.optisigns.com',
-  maxArticles: 2,
+  maxArticles: 50,
   delay: 1500
 });
 
