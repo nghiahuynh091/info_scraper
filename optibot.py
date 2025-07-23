@@ -21,7 +21,7 @@ class OptiBotManager:
         """Update vector store using timestamp comparison"""
         if not self.vector_store_id:
             print("No vector store ID provided")
-            return
+            return {"added": [], "updated": [], "skipped": []}
         
         print("Checking for updates...")
         
@@ -29,25 +29,38 @@ class OptiBotManager:
         local_files = self._get_local_files()
         if not local_files:
             print("No articles found")
-            return
+            return {"added": [], "updated": [], "skipped": []}
         
         # 2. Get last scrape time
         last_scrape_time = self._get_last_scrape_time()
         
         # 3. Find files that need updating
-        files_to_update = self._find_files_to_update(local_files, last_scrape_time)
+        files_to_update, file_categories = self._find_files_to_update(local_files, last_scrape_time)
+        
+        # Calculate counts for reporting
+        total_files = len(local_files)
+        files_updated = len(files_to_update)
+        files_skipped = total_files - files_updated
         
         if not files_to_update:
             print("All articles are up to date")
-            return
+            # Still save cache to update counts
+            self._save_cache(local_files, 0, 0, total_files)
+            return {
+                "added": [],
+                "updated": [], 
+                "skipped": list(local_files.keys())
+            }
         
         # 4. Upload files
         self._upload_files(files_to_update, local_files)
         
-        # 5. Save updated cache
-        self._save_cache(local_files)
+        # 5. Save updated cache with counts
+        self._save_cache(local_files, files_updated, 0, files_skipped)
         
         print("Update completed successfully")
+        
+        return file_categories
     
     def _get_local_files(self):
         """Get local files with timestamp metadata"""
@@ -135,6 +148,8 @@ class OptiBotManager:
     def _find_files_to_update(self, local_files, last_scrape_time):
         """Find files that need updating based on timestamps and missing files"""
         files_to_update = []
+        file_categories = {"added": [], "updated": [], "skipped": []}
+        
         print(f"Last scrape: {last_scrape_time or 'Never (will update all)'}")
         
         existing_files, cached_file_data, cache_exists = self._load_cache_data()
@@ -144,8 +159,9 @@ class OptiBotManager:
             print("No cached articles found - uploading all articles")
             for filename in local_files.keys():
                 files_to_update.append(filename)
+                file_categories["added"].append(filename)
                 print(f"FIRST UPLOAD: {filename}")
-            return files_to_update
+            return files_to_update, file_categories
         
         for filename, file_info in local_files.items():
             created_at, updated_at = file_info['created_at'], file_info['updated_at']
@@ -153,17 +169,20 @@ class OptiBotManager:
             # Skip files without timestamps
             if not created_at or not updated_at:
                 print(f"SKIP: {filename} (missing timestamps)")
+                file_categories["skipped"].append(filename)
                 continue
             
             # Check if this is a new file not in cache
             if filename not in existing_files:
                 files_to_update.append(filename)
+                file_categories["added"].append(filename)
                 print(f"NEW FILE: {filename}")
                 continue
             
             # Check if file exists in cache but has null file_id (needs re-upload)
             if cached_file_data[filename].get('file_id') is None:
                 files_to_update.append(filename)
+                file_categories["added"].append(filename)
                 print(f"MISSING FILE_ID: {filename}")
                 continue
             
@@ -174,13 +193,23 @@ class OptiBotManager:
                     updated_dt = datetime.fromisoformat(updated_at.replace('Z', '+00:00'))
                     last_scrape_dt = datetime.fromisoformat(last_scrape_time.replace('Z', '+00:00'))
                     
-                    if created_dt > last_scrape_dt or updated_dt > last_scrape_dt:
+                    if created_dt > last_scrape_dt:
                         files_to_update.append(filename)
+                        file_categories["added"].append(filename)
+                        print(f"NEW: {filename}")
+                    elif updated_dt > last_scrape_dt:
+                        files_to_update.append(filename)
+                        file_categories["updated"].append(filename)
                         print(f"UPDATED: {filename}")
+                    else:
+                        file_categories["skipped"].append(filename)
                 except Exception as e:
                     print(f"SKIP: {filename} (timestamp error: {e})")
-            
-        return files_to_update
+                    file_categories["skipped"].append(filename)
+            else:
+                file_categories["skipped"].append(filename)
+        
+        return files_to_update, file_categories
     
     def _upload_files(self, files_to_update, local_files):
         """Upload files to vector store"""
@@ -208,26 +237,9 @@ class OptiBotManager:
                 vector_store_id=self.vector_store_id,
                 file_ids=file_ids
             )
-            
-            self._wait_for_processing()
+            print("Files uploaded successfully")
     
-    def _wait_for_processing(self):
-        """Wait for vector store processing"""
-        print("Processing files...")
-        
-        for i in range(20):  # Wait up to 1 minute
-            try:
-                vs = self.client.vector_stores.retrieve(self.vector_store_id)
-                if vs.file_counts and vs.file_counts.in_progress == 0:
-                    print("All files processed successfully")
-                    return
-            except:
-                pass
-            time.sleep(3)
-        
-        print("Processing completed (timeout reached)")
-    
-    def _save_cache(self, local_files):
+    def _save_cache(self, local_files, files_added=0, files_updated=0, files_skipped=0):
         """Save cache with current timestamp, preserving existing metadata and file_ids"""
         cache_file = Path(".optibot_cache.json")
         
@@ -250,11 +262,14 @@ class OptiBotManager:
                 file_info['file_id'] = cache_data[filename].get('file_id')
             cache_data[filename] = file_info
         
-        # Update metadata
+        # Update metadata with counts
         cache_data['_metadata'] = {
             **existing_metadata,
             'last_upload_time': datetime.now().isoformat() + 'Z',
-            'version': '2.0'
+            'version': '2.0',
+            'files_added': files_added,
+            'files_updated': files_updated,
+            'files_skipped': files_skipped
         }
         
         try:
