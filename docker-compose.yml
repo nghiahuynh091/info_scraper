@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  optibot:
+    build: .
+    container_name: optibot-pipeline
+    volumes:
+      # Keep reports in local
+      - ./reports:/app/reports
+    
+    # For testing: run once and stop (comment out restart line)
+    # restart: unless-stopped
+    
+    # This runs the main command once
+    command: ["python3", "main.py"]

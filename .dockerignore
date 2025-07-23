@@ -1,0 +1,30 @@
+# Git files
+.git
+.gitignore
+
+# Cache and temporary files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+node_modules/.cache
+.npm
+
+# Development files - but keep article .md files!
+README.md
+reference/
+
+# Local cache and reports content (structure will be created in container)
+.optibot_cache.json
+reports/*.json
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+
+# OS files
+.DS_Store
+
+# Build script (using docker-compose instead)
+build.sh
