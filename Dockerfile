@@ -19,7 +19,6 @@ RUN python3 -m pip install --no-cache-dir --break-system-packages -r requirement
 
 COPY main.py ./
 COPY optibot.py ./
-COPY config.py ./
 COPY src/ ./src/
 
 RUN mkdir -p articles reports

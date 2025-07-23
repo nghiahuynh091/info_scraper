@@ -1,0 +1,25 @@
+name: optibot-scheduler
+region: sgp
+
+jobs:
+  - name: daily-optibot
+    source_dir: /
+    dockerfile_path: Dockerfile
+    github:
+      repo: nghiahuynh091/info_scraper
+      branch: main
+      deploy_on_push: true
+    run_command: python3 main.py
+    instance_count: 1
+    instance_size_slug: basic-xxs
+
+    envs:
+      - key: OPENAI_API_KEY
+        value: YOUR_OPENAI_API_KEY_HERE
+        type: SECRET
+      - key: ASSISTANT_ID
+        value: asst_7E31X9yKKNDpXNTUBnkYoVtI
+        type: GENERAL
+      - key: VECTOR_STORE_ID
+        value: vs_6880bdb23f6c8191b819a6440153b8d4
+        type: GENERAL

@@ -3,14 +3,20 @@
 OptiBot - Simple assistant manager with timestamp-based updates
 """
 
+import os
 from openai import OpenAI
 from pathlib import Path
 import time
 import sys
 import json
 from datetime import datetime
-from config import OPENAI_API_KEY, ASSISTANT_ID, VECTOR_STORE_ID
+# Configuration from environment variables
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+ASSISTANT_ID = os.getenv('ASSISTANT_ID', 'asst_7E31X9yKKNDpXNTUBnkYoVtI')
+VECTOR_STORE_ID = os.getenv('VECTOR_STORE_ID', 'vs_6880bdb23f6c8191b819a6440153b8d4')
 
+if not OPENAI_API_KEY:
+    raise ValueError("OPENAI_API_KEY environment variable is required")
 class OptiBotManager:
     def __init__(self, assistant_id=None, vector_store_id=None):
         self.client = OpenAI(api_key=OPENAI_API_KEY)
