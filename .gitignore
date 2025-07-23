@@ -10,6 +10,11 @@ config.py
 # OptiBot cache (contains file hashes and OpenAI file IDs)
 .optibot_cache.json
 
+# Production logs and reports
+logs/
+reports/
+cache/
+
 # Generated content (scraped articles)
 articles/
 output/
