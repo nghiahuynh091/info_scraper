@@ -18,8 +18,8 @@ jobs:
         value: YOUR_OPENAI_API_KEY_HERE
         type: SECRET
       - key: ASSISTANT_ID
-        value: asst_7E31X9yKKNDpXNTUBnkYoVtI
+        value: YOUR_ASSISTANT_ID_HERE
         type: GENERAL
       - key: VECTOR_STORE_ID
-        value: vs_6880bdb23f6c8191b819a6440153b8d4
+        value: YOUR_VECTOR_STORE_ID_HERE
         type: GENERAL

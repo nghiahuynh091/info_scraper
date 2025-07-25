@@ -42,20 +42,24 @@ python3 main.py
 OPENAI_API_KEY=your_different_key_here python3 main.py
 ```
 
-### 4. Production Deployment
+### 4. Production Deployment with Daily Scheduling
 
-#### DigitalOcean App Platform (Simple)
-1. **Create App**: Go to https://cloud.digitalocean.com/apps → Create App
-2. **Connect GitHub**: Select `nghiahuynh091/info_scraper` repo
-3. **Choose Job**: Select "Job" type (not Service)
-4. **Set Environment Variables**:
-   - `OPENAI_API_KEY`: Your actual API key
-   - `ASSISTANT_ID`: Your assistant ID  
-   - `VECTOR_STORE_ID`: Your vector store ID
-5. **Deploy**: Click "Create Resources"
-6. **Run**: Manually trigger from DigitalOcean dashboard whenever needed
+#### DigitalOcean + Cron-job.org (Recommended)
 
-**Cost**: ~$0.02 per job execution
+**Total setup time: ~10 minutes**
+
+1. **Quick Deploy**: Use `.do/app.yaml` to deploy job to DigitalOcean
+2. **Schedule**: Use free cron-job.org service to trigger daily at 7 PM Vietnam time
+3. **Cost**: ~$0.02/month total
+
+📋 **Complete Guide**: See `SETUP_GUIDE.md` for detailed step-by-step instructions
+
+**What you get:**
+
+- ✅ Automatic daily execution
+- ✅ Monitoring & logs
+- ✅ 99.9% reliability
+- ✅ Easy to modify schedule
 
 #### Option B: DigitalOcean App Platform
 
