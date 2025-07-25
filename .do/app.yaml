@@ -2,7 +2,7 @@ name: optibot-scheduler
 region: sgp
 
 jobs:
-  - name: daily-optibot
+  - name: info-scraper
     source_dir: /
     dockerfile_path: Dockerfile
     github:
