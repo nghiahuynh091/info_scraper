@@ -6,6 +6,8 @@ yarn-error.log*
 
 # Configuration files with API keys
 config.py
+.env
+.env.local
 
 
 # OptiBot cache (contains file hashes and OpenAI file IDs)

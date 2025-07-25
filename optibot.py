@@ -12,11 +12,15 @@ import json
 from datetime import datetime
 # Configuration from environment variables
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
-ASSISTANT_ID = os.getenv('ASSISTANT_ID', 'asst_7E31X9yKKNDpXNTUBnkYoVtI')
-VECTOR_STORE_ID = os.getenv('VECTOR_STORE_ID', 'vs_6880bdb23f6c8191b819a6440153b8d4')
+ASSISTANT_ID = os.getenv('ASSISTANT_ID')
+VECTOR_STORE_ID = os.getenv('VECTOR_STORE_ID')
 
 if not OPENAI_API_KEY:
     raise ValueError("OPENAI_API_KEY environment variable is required")
+if not ASSISTANT_ID:
+    raise ValueError("ASSISTANT_ID environment variable is required - set in .env file")
+if not VECTOR_STORE_ID:
+    raise ValueError("VECTOR_STORE_ID environment variable is required - set in .env file")
 class OptiBotManager:
     def __init__(self, assistant_id=None, vector_store_id=None):
         self.client = OpenAI(api_key=OPENAI_API_KEY)

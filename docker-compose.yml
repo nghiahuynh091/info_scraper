@@ -4,6 +4,8 @@ services:
   optibot:
     build: .
     container_name: optibot-pipeline
+    env_file:
+      - .env  # Load environment variables from .env file
     volumes:
       # Keep reports in local
       - ./reports:/app/reports
