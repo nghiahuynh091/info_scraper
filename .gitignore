@@ -10,8 +10,7 @@ config.py
 .env.local
 
 
-# OptiBot cache (contains file hashes and OpenAI file IDs)
-.optibot_cache.json
+.bot_cache.json
 
 # Production logs and reports
 logs/

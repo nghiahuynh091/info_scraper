@@ -1,9 +1,9 @@
 version: '3.8'
 
 services:
-  optibot:
+  chatbot:
     build: .
-    container_name: optibot-pipeline
+    container_name: chatbot-pipeline
     env_file:
       - .env  # Load environment variables from .env file
     volumes:

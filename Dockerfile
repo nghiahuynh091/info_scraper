@@ -1,4 +1,3 @@
-# OptiBot Dockerfile - Both Node.js and Python
 
 FROM node:18-slim
 
@@ -18,7 +17,7 @@ COPY requirements.txt ./
 RUN python3 -m pip install --no-cache-dir --break-system-packages -r requirements.txt
 
 COPY main.py ./
-COPY optibot.py ./
+COPY chatbot.py ./
 COPY src/ ./src/
 
 RUN mkdir -p articles reports

@@ -1,108 +1,147 @@
-# OptiBot Article Scraper & Uploader
+# Article Scraper & Uploader
 
-Automated system to scrape Zendesk articles and upload them to OpenAI Assistant's vector store.
+Automated system to scrape Zendesk articles and upload them to an OpenAI Assistant vector store.
 
-## 🚀 Quick Start
+## Setup
 
-### 1. Prerequisites Setup
+### 1. Environment Configuration
+
+Copy the sample and edit your .env:
 
 ```bash
-# Copy environment template
 cp .env.sample .env
-
-# Edit .env with your configuration
-ASSISTANT_ID=your_assistant_id_here
-VECTOR_STORE_ID=your_vector_store_id_here
-OPENAI_API_KEY=your_openai_api_key_here  # Optional: can override via command line
 ```
 
+Then edit .env with your configuration. Just make sure that you fill up all the configuration before running the application:
+
+```
+ASSISTANT_ID
+VECTOR_STORE_ID
+OPENAI_API_KEY=
+BASE_URL=https://support.company.com
+MAX_ARTICLES=30
+ASSISTANT_INSTRUCTIONS=You are chatbot,...
+```
+
+You can get ASSISTANT_ID and VECTOR_STORE_ID by creating them on https://platform.openai.com/assistants and https://platform.openai.com/storage/vector_stores or by running:
+
+```bash
+python initial_setup.py
+```
+
+- `initial_setup.py` will create a new assistant and vector store, and update your .env file automatically.
+
+## How to Run
+
+You can run the full pipeline with one command, use Docker, or run each step separately for more control.
+
+### 1. Run Everything (Full Pipeline)
+
+```bash
+python main.py
+```
+Or override API key:
+```bash
+OPENAI_API_KEY=your_openai_api_key_here python main.py
+```
 ### 2. Run with Docker
 
-**Option A: Use .env file API key**
-
+Build the Docker image:
 ```bash
-docker build -t optibot .
-docker run --rm --env-file .env optibot
+docker build -t chatbot .
+```
+Run the full pipeline using .env for configuration:
+```bash
+docker run --rm --env-file .env chatbot python main.py
+```
+Or override API key directly:
+```bash
+docker run --rm -e OPENAI_API_KEY=your_openai_api_key_here chatbot python main.py
 ```
 
-**Option B: Override API key via command line**
+### 3. Run Each Step Separately
 
+#### a. Scraper (Node.js)
+
+Change to the src directory:
 ```bash
-docker build -t optibot .
-docker run --rm -e OPENAI_API_KEY=your_different_key_here --env-file .env optibot
+cd src
+```
+Install dependencies:
+```bash
+npm install
+```
+Run the scraper:
+```bash
+node scraper-cli.js
 ```
 
-### 3. Local Development
+#### b. Uploader (Python)
 
+Install Python dependencies:
 ```bash
-# Use .env file
-python3 main.py
-
-# Or override API key
-OPENAI_API_KEY=your_different_key_here python3 main.py
+pip install -r requirements.txt
+```
+Run the uploader:
+```bash
+python chatbot.py update
 ```
 
-### 4. Production Deployment with Daily Scheduling
+#### c. Test the Chatbot (Python)
 
-#### DigitalOcean + Cron-job.org (Recommended)
+Run chatbot test (you can modify the question in chatbot.py as needed):
+```bash
+python chatbot.py test
+```
 
-**Total setup time: ~10 minutes**
+#### d. List or Clean Up OpenAI Resources
 
-1. **Quick Deploy**: Use `.do/app.yaml` to deploy job to DigitalOcean
-2. **Schedule**: Use free cron-job.org service to trigger daily at 7 PM Vietnam time
-3. **Cost**: ~$0.02/month total
+List all assistants, vector stores, and files:
+```bash
+python cleanup.py list
+```
+Delete all assistants, vector stores, and files (DANGEROUS):
+```bash
+python cleanup.py all
+```
+#### Warning
 
-📋 **Complete Guide**: See `SETUP_GUIDE.md` for detailed step-by-step instructions
+If you run the app separately and get wrong logic (wrong update, scraper, etc.), just remove the following files, clean up the OpenAI Resources, and run all again.
 
-**What you get:**
+```bash
+rm -rf articles reports .bot_cache.json
+```
 
-- ✅ Automatic daily execution
-- ✅ Monitoring & logs
-- ✅ 99.9% reliability
-- ✅ Easy to modify schedule
+## Daily Job Logs
 
-#### Option B: DigitalOcean App Platform
-
-1. Deploy using `.do/app.yaml`
-2. Set `OPENAI_API_KEY` in DigitalOcean dashboard
-3. Manual or API-triggered execution
-
-#### Option B: DigitalOcean App Platform
-
-1. Deploy using `.do/app.yaml`
-2. Set environment variables in DigitalOcean dashboard
-3. Manual or API-triggered execution
-
-## 📊 Monitoring & Logs
-
-- **GitHub Actions**: Check Actions tab for execution logs
-- **Local Reports**: Generated in `reports/latest_log.json`
-- **DigitalOcean**: App dashboard → Activity tab
-
-## 🔐 Security
-
-- ✅ No API keys in code
-- ✅ Environment variables only
-- ✅ `.env` files ignored by git
-- ✅ Template files for easy setup
-- Preserves article metadata in frontmatter
-- Organizes output by category and section
-- Generates a complete index of all articles
+- [Local Reports](reports/latest_log.json)
 
 ## Output
-
-The scraper creates:
 
 - Individual Markdown files for each article
 - Organized folder structure by category/section
 - Complete frontmatter with article metadata
 - Index file listing all scraped articles
+## Sample
+The chatbot answer to question: "How do I add a Youtube video ?"
+![Alt text](answer_with_citations.png)
+## Reference
 
-## Requirements
+- Node.js 14+ (for scraping)
+- Python 3.8+ (for uploading)
+- Docker (optional, for containerized runs)
+- Internet connection to access the help center and OpenAI API
 
-- Node.js 14+
-- Internet connection to access the help center
+### Script Roles
 
-## Configuration
+- **scraper-cli.js**: Downloads articles from Zendesk and saves them as Markdown.
+- **chatbot.py**: Uploads articles to OpenAI vector store and can test the chatbot.
+- **initial_setup.py**: Creates a new assistant and vector store, and updates your .env.
+- **cleanup.py**: Lists or deletes all OpenAI resources (assistants, vector stores, files).
+- **main.py**: Orchestrates the full pipeline (scraping + uploading).
 
-Edit `src/scraper-cli.js` to change the target help center URL and the number of expected scraped articles.
+### Troubleshooting
+
+- If you see errors about missing environment variables, check your `.env` file.
+- If you get authentication errors, verify your `OPENAI_API_KEY`.
+- If you get rate limit errors, try reducing `MAX_ARTICLES` or increasing delay in your scraper.

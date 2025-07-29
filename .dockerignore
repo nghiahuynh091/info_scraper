@@ -15,7 +15,7 @@ README.md
 reference/
 
 # Local cache and reports content (structure will be created in container)
-.optibot_cache.json
+.bot_cache.json
 reports/*.json
 
 # IDE files

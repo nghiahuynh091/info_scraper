@@ -1,19 +1,12 @@
 #!/usr/bin/env python3
-"""
-OptiBot Production Pipeline
-"""
-
 import json
 import subprocess
 import sys
 import time
 from datetime import datetime
 from pathlib import Path
-from optibot import OptiBotManager
-
+from chatbot import ChatBotManager
 def check_dependencies():
-    """Check if all required dependencies are available"""    
-    # Check Node.js
     try:
         result = subprocess.run(['node', '--version'], capture_output=True, text=True, timeout=10)
         if result.returncode != 0:
@@ -23,7 +16,6 @@ def check_dependencies():
         print(f"ERROR: Node.js check failed: {e}")
         return False
     
-    # Check NPM dependencies
     if not Path('node_modules').exists():
         print("Installing NPM dependencies...")
         try:
@@ -49,8 +41,6 @@ def run_scraper():
         if result.returncode == 0:
             print("Scraping completed successfully")
 
-            # if result.stdout:
-            #     print("Scraper output:", result.stdout.strip())
             
             return True
         else:
@@ -72,7 +62,7 @@ def run_uploader():
     print("Running uploader...")
     
     try:
-        manager = OptiBotManager()
+        manager = ChatBotManager()
         results = manager.update_vector_store()
                     
         print("Upload completed successfully")
@@ -82,8 +72,8 @@ def run_uploader():
         return False, None
 
 def get_pipeline_stats():
-    """Get statistics about the pipeline execution"""
-    cache_file = Path(".optibot_cache.json")
+
+    cache_file = Path(".bot_cache.json")
     articles_dir = Path("articles")
     
     stats = {
@@ -94,7 +84,6 @@ def get_pipeline_stats():
         "skipped": 0
     }
     
-    # Get cache stats
     if cache_file.exists():
         try:
             with open(cache_file, 'r') as f:
@@ -110,7 +99,6 @@ def get_pipeline_stats():
         except Exception as e:
             print(f"WARNING: Could not read cache stats: {e}")
     
-    # Get local file count
     if articles_dir.exists():
         local_files = [f for f in articles_dir.glob("*.md") if f.name != "README.md"]
         stats["local_files"] = len(local_files)
@@ -120,7 +108,6 @@ def get_pipeline_stats():
     return stats
 
 def save_execution_report(success, start_time, stats, detailed_results=None):
-    """Save execution report for monitoring"""
     reports_dir = Path("reports")
     reports_dir.mkdir(exist_ok=True)
     
@@ -137,7 +124,6 @@ def save_execution_report(success, start_time, stats, detailed_results=None):
         "latest_report": "reports/latest_log.json",
     }
     
-    # Save latest report
     latest_report = reports_dir / "latest_log.json"
     with open(latest_report, 'w') as f:
         json.dump(report, f, indent=2)
@@ -154,11 +140,10 @@ def save_execution_report(success, start_time, stats, detailed_results=None):
 
 def main():
     print("\n\n")
-    """Main pipeline execution function"""
     start_time = time.time()
     success = False
     
-    print("Scraper-Uploader for OptiBot Starting...")
+    print("Scraper-Uploader Starting...")
 
     print("=" * 60)
     
@@ -199,17 +184,14 @@ def main():
     finally:
         # Always save report
         stats = get_pipeline_stats()
-        report =         save_execution_report(success, start_time, stats, detailed_results)
+        save_execution_report(success, start_time, stats, detailed_results)
         
-        # execution_time = report["execution_time_seconds"]
         
         print("=" * 60)
         if success:
             print("PROCESS COMPLETED SUCCESSFULLY")
-            # print(f"Total execution time: {execution_time} seconds")
         else:
             print("PROCESS FAILED")
-            # print(f"Execution time: {execution_time} seconds")
                 
         return success
 
@@ -220,7 +202,7 @@ if __name__ == "__main__":
         
         if command == "test":
             try:
-                manager = OptiBotManager()
+                manager = ChatBotManager()
                 manager.test_assistant()
                 sys.exit(0)
             except Exception as e:
