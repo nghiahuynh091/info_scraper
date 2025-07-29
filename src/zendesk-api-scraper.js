@@ -1,8 +1,3 @@
-/**
- * Zendesk Help Center API Scraper
- * Fetches articles via Zendesk API and converts to clean Markdown files
- */
-
 import axios from 'axios';
 import fs from 'fs/promises';
 import path from 'path';
@@ -13,34 +8,29 @@ const __dirname = path.dirname(__filename);
 
 class ZendeskApiScraper {
   constructor(options = {}) {
-    this.baseUrl = options.baseUrl || 'https://support.optisigns.com';
+    this.baseUrl = options.baseUrl;
     this.apiUrl = `${this.baseUrl}/api/v2/help_center`;
     this.locale = options.locale || 'en-us';
     this.outputDir = options.outputDir || path.join(__dirname, '../articles');
     this.delay = options.delay || 1000;
-    this.maxArticles = options.maxArticles || 50;
+    this.maxArticles = options.maxArticles || 30;
     
     // Create axios instance with proper headers
     this.api = axios.create({
       timeout: 30000,
       headers: {
-        'User-Agent': 'OptiSigns Article Scraper 1.0',
+        'User-Agent': 'Article Scraper 1.0',
         'Accept': 'application/json',
         'Content-Type': 'application/json'
       }
     });
   }
 
-  /**
-   * Sleep for specified milliseconds
-   */
   async sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
-  /**
-   * Ensure output directory exists
-   */
+
   async ensureOutputDir() {
     try {
       await fs.mkdir(this.outputDir, { recursive: true });
@@ -51,9 +41,6 @@ class ZendeskApiScraper {
     }
   }
 
-  /**
-   * Fetch all categories from Zendesk API
-   */
   async fetchCategories() {
     try {
           console.log('Fetching categories...');
@@ -67,9 +54,7 @@ class ZendeskApiScraper {
     }
   }
 
-  /**
-   * Fetch all sections from a category
-   */
+
   async fetchSections(categoryId) {
     try {
       const response = await this.api.get(`${this.apiUrl}/${this.locale}/categories/${categoryId}/sections.json`);
@@ -80,9 +65,7 @@ class ZendeskApiScraper {
     }
   }
 
-  /**
-   * Fetch all articles from a section
-   */
+
   async fetchArticles(sectionId) {
     try {
       const response = await this.api.get(`${this.apiUrl}/${this.locale}/sections/${sectionId}/articles.json`);
@@ -93,9 +76,7 @@ class ZendeskApiScraper {
     }
   }
 
-  /**
-   * Fetch full article content including body
-   */
+
   async fetchArticleContent(articleId) {
     try {
       await this.sleep(this.delay);
@@ -107,9 +88,6 @@ class ZendeskApiScraper {
     }
   }
 
-  /**
-   * Convert HTML to clean Markdown
-   */
   htmlToMarkdown(html, articleUrl) {
     if (!html) return '';
 
@@ -198,9 +176,7 @@ class ZendeskApiScraper {
     return markdown;
   }
 
-  /**
-   * Generate a slug from title
-   */
+
   generateSlug(title) {
     return title
       .toLowerCase()
@@ -210,9 +186,7 @@ class ZendeskApiScraper {
       .replace(/^-|-$/g, ''); //leading/trailing hyphens
   }
 
-  /**
-   * Save article as Markdown file
-   */
+
   async saveArticleAsMarkdown(article, category, section) {
     try {
       const slug = this.generateSlug(article.title);
@@ -221,7 +195,6 @@ class ZendeskApiScraper {
 
       const markdownContent = this.htmlToMarkdown(article.body, article.html_url);
 
-      // Create frontmatter with metadata
       const frontmatter = `---
 title: "${article.title.replace(/"/g, '\\"')}"
 id: ${article.id}
@@ -261,9 +234,7 @@ tags: ${JSON.stringify(article.label_names || [])}
     }
   }
 
-  /**
-   * Scrape all articles from OptiSigns Help Center
-   */
+
   async scrapeAllArticles() {
       console.log('Starting help center scraper...');
     console.log(`Target: ${this.baseUrl}`);
@@ -322,47 +293,6 @@ tags: ${JSON.stringify(article.label_names || [])}
     return savedArticles;
   }
 
-  /**
-   * Generate index file with all articles
-   */
-  async generateIndex(savedArticles) {
-    const indexPath = path.join(this.outputDir, 'README.md');
-    
-    let indexContent = `# OptiSigns Help Center Articles
-
-This directory contains ${savedArticles.length} articles scraped from the OptiSigns Help Center.
-
-## Articles by Title
-
-`;
-
-    savedArticles
-      .sort((a, b) => a.title.localeCompare(b.title))
-      .forEach(article => {
-        indexContent += `- [${article.title}](${article.filename})\n`;
-      });
-
-    indexContent += `
-## Scraping Details
-
-- **Source**: ${this.baseUrl}
-- **Scraped on**: ${new Date().toISOString()}
-- **Total articles**: ${savedArticles.length}
-- **Format**: Markdown with YAML frontmatter
-
-## File Structure
-
-Each article includes:
-- YAML frontmatter with metadata (title, ID, URLs, dates, etc.)
-- Clean Markdown content
-- Preserved relative links and code blocks
-- Removed navigation and ads
-
-`;
-
-    await fs.writeFile(indexPath, indexContent, 'utf8');
-    console.log(`Generated index: README.md`);
-  }
 }
 
 export default ZendeskApiScraper;
