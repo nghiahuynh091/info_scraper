@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
-"""
-Cleanup - Delete assistants and vector stores
-"""
 
-from openai import OpenAI
+import os
 import sys
-from config import OPENAI_API_KEY
+from openai import OpenAI
+from dotenv import load_dotenv
+
+load_dotenv() 
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 
 def list_all():
-    """List all assistants and vector stores"""
     client = OpenAI(api_key=OPENAI_API_KEY)
     
     print("Listing all resources...")
@@ -78,7 +78,6 @@ def list_all():
         print(f"Error listing files: {e}")
 
 def clean_all():
-    """Delete all assistants and vector stores"""
     client = OpenAI(api_key=OPENAI_API_KEY)
     
     print("Cleaning all resources...")
